@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>코드네임 입력</title>
+  <style>
+    body {
+      background-color: #f2f2f2;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      padding-top: 100px;
+      color: black;
+    }
+    .code-input {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input.code-box {
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+      text-align: center;
+      text-transform: uppercase;
+      border: 2px solid black;
+    }
+    #message {
+      margin-top: 30px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>코드네임을 입력하세요</h1>
+  <div class="code-input">
+    <input maxlength="1" class="code-box" id="box1" oninput="moveNext(this, 'box2')" onkeydown="handleBackspace(event, null)">
+    <input maxlength="1" class="code-box" id="box2" oninput="moveNext(this, 'box3')" onkeydown="handleBackspace(event, 'box1')">
+    <input maxlength="1" class="code-box" id="box3" oninput="moveNext(this, 'box4')" onkeydown="handleBackspace(event, 'box2')">
+    <input maxlength="1" class="code-box" id="box4" oninput="moveNext(this, 'box5')" onkeydown="handleBackspace(event, 'box3')">
+    <input maxlength="1" class="code-box" id="box5" oninput="moveNext(this, 'box6')" onkeydown="handleBackspace(event, 'box4')">
+    <input maxlength="1" class="code-box" id="box6" onkeydown="handleBackspace(event, 'box5')">
+  </div>
+
+  <button onclick="checkCode()">입력</button>
+
+  <div id="message"></div>
+  <canvas id="fireworks"></canvas>
+
+  <script>
+    function moveNext(current, nextId) {
+      if (current.value.length === 1 && nextId) {
+        document.getElementById(nextId).focus();
+      }
+    }
+
+    function handleBackspace(e, prevId) {
+      if ((e.key === "Backspace" || e.key === "Delete") && e.target.value === "") {
+        if (prevId) document.getElementById(prevId).focus();
+      }
+    }
+
+    function checkCode() {
+      const code = [...Array(6)].map((_, i) => document.getElementById("box" + (i + 1)).value.toUpperCase()).join('');
+      if (code === "CHRIST") {
+        document.getElementById("message").innerHTML = "🎉 축하합니다!<br>최종 목적지는 <b>포토존</b>입니다.<br>오셔서 인증해 주세요!";
+        launchFireworks();
+      } else {
+        document.getElementById("message").innerText = "❌ 코드가 틀렸습니다.";
+      }
+    }
+
+    // Fireworks
+    const canvas = document.getElementById("fireworks");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let fireworks = [];
+
+    class Firework {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height / 2;
+        this.particles = [];
+        for (let i = 0; i < 80; i++) {
+          const angle = Math.random() * 2 * Math.PI;
+          const speed = Math.random() * 4 + 1;
+          this.particles.push({
+            x: this.x,
+            y: this.y,
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
+            alpha: 1,
+            radius: Math.random() * 2 + 1
+          });
+        }
+      }
+
+      update() {
+        this.particles.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.alpha -= 0.015;
+        });
+      }
+
+      draw() {
+        this.particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 100, 0, ${p.alpha})`;
+          ctx.fill();
+        });
+      }
+    }
+
+    let animId;
+    function launchFireworks() {
+      fireworks = [];
+      for (let i = 0; i < 10; i++) {
+        fireworks.push(new Firework());
+      }
+      animateFireworks();
+      setTimeout(() => cancelAnimationFrame(animId), 3000);
+    }
+
+    function animateFireworks() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      fireworks.forEach(f => {
+        f.update();
+        f.draw();
+      });
+      animId = requestAnimationFrame(animateFireworks);
+    }
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+
+</body>
+</html>
